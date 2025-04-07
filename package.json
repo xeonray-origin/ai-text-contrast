@@ -1,0 +1,15 @@
+{
+  "name": "ai-text-hue",
+  "version": "1.0.0",
+  "description": "Update description",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Amritendu Bhattacharjee (xeonray-origin)",
+  "license": "ISC",
+  "dependencies": {
+    "brain.js": "^2.0.0-beta.24",
+    "csv-parser": "^3.2.0"
+  }
+}
