@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Picker</title>
+    <script>
+        function hexTorgb(hex) {
+            return ['0x' + hex[1] + hex[2] | 0, '0x' + hex[3] + hex[4] | 0, '0x' + hex[5] + hex[6] | 0];
+        }
+        function handleSubmit() {
+            const color = document.getElementById('colorPicker').value;
+            const rgb = hexTorgb(color);
+            console.log(rgb);
+        }
+    </script>
+</head>
+<body>
+    <h1>Choose a Color</h1>
+    <form onsubmit="event.preventDefault(); handleSubmit();">
+        <label for="colorPicker">Pick a color:</label>
+        <input type="color" id="colorPicker" name="colorPicker">
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
