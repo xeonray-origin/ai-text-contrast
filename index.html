@@ -4,23 +4,185 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Color Picker</title>
+    <style>
+        /* Overlay styles */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s;
+        }
+
+        #overlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #007BFF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .overlay-text {
+            color: white;
+            font-size: 1.5em;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
     <script>
         function hexTorgb(hex) {
             return ['0x' + hex[1] + hex[2] | 0, '0x' + hex[3] + hex[4] | 0, '0x' + hex[5] + hex[6] | 0];
         }
+
+        function showOverlay() {
+            const overlay = document.getElementById('overlay');
+            overlay.classList.add('visible');
+        }
+
+        function hideOverlay() {
+            const overlay = document.getElementById('overlay');
+            overlay.classList.remove('visible');
+        }
+
         function handleSubmit() {
             const color = document.getElementById('colorPicker').value;
             const rgb = hexTorgb(color);
-            console.log(rgb);
+
+            // Show the overlay
+            showOverlay();
+
+            fetch(`http://localhost:3000/train?rgb=${rgb}`, {
+                method: 'GET',
+            })
+            .then(response => response.json())
+            .then(data => {
+                const trainResponse = data;
+                console.log(trainResponse);
+                // Update the div with id display's background color with rgb value from above
+                const displayDiv = document.getElementById('display');
+                displayDiv.style.backgroundColor = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+
+                // Update the text color inside the div with id display to the value in prediction key from trainResponse
+                if (trainResponse.prediction) {
+                    displayDiv.style.color = trainResponse.prediction;
+                }
+                const tableBody = document.getElementById('jsonTable').querySelector('tbody');
+                tableBody.innerHTML = ''; // Clear previous data
+
+                console.log("Training completed");
+                console.log("Performance:", trainResponse.performance);
+
+                const { durationMs, testResults } = trainResponse.performance;
+                const performanceRow = document.createElement('tr');
+                performanceRow.innerHTML = `
+                    <td style="border: 1px solid #ddd; padding: 8px;">Total training time</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${durationMs}ms</td>
+                `;
+                tableBody.appendChild(performanceRow);
+                    tableBody.appendChild(row);
+                }
+                
+            ).then(()=>{
+                // call endpoint localhost:3000/
+            })
+            .catch(error => console.error('Error:', error))
+            .finally(() => {
+                // Hide the overlay
+                hideOverlay();
+            });
         }
     </script>
 </head>
 <body>
-    <h1>Choose a Color</h1>
-    <form onsubmit="event.preventDefault(); handleSubmit();">
-        <label for="colorPicker">Pick a color:</label>
-        <input type="color" id="colorPicker" name="colorPicker">
-        <button type="submit">Submit</button>
-    </form>
+    <!-- Overlay -->
+    <div id="overlay">
+        <div>
+            <div style="display: flex; justify-content: center;">
+                <div class="spinner"></div>
+            </div>
+            <div class="overlay-text">Training model with 10,000 data points</div>
+            <div class="overlay-text" id="elapsedTime">Elapsed Time: 0s</div>
+            <script>
+                let startTime;
+
+                function showOverlay() {
+                    const overlay = document.getElementById('overlay');
+                    overlay.classList.add('visible');
+                    startTime = Date.now();
+                    updateElapsedTime();
+                }
+
+                function hideOverlay() {
+                    const overlay = document.getElementById('overlay');
+                    overlay.classList.remove('visible');
+                    clearInterval(elapsedTimeInterval);
+                }
+
+                let elapsedTimeInterval;
+
+                function updateElapsedTime() {
+                    const elapsedTimeElement = document.getElementById('elapsedTime');
+                    elapsedTimeInterval = setInterval(() => {
+                        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                        elapsedTimeElement.textContent = `Elapsed Time: ${elapsedSeconds}s`;
+                    }, 1000);
+                }
+            </script>
+        </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; padding: 20px;">
+        <!-- Left Section -->
+        <div style="flex: 1; min-width: 300px; border: 1px solid #ccc; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <h1 style="text-align: center;">Choose a Color</h1>
+            <form onsubmit="event.preventDefault(); handleSubmit();" style="text-align: center;">
+                <label for="colorPicker" style="font-size: 1.2em; display: block; margin-bottom: 10px;">Pick a color:</label>
+                <input type="color" id="colorPicker" name="colorPicker" style="width: 100%; height: 50px; border: none; cursor: pointer;">
+                <button type="submit" style="margin-top: 20px; padding: 10px 20px; font-size: 1em; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">Submit</button>
+            </form>
+            <div id="display" style="margin-top: 20px; padding: 20px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; text-align: center;">
+                <p style="margin: 0; font-size: 1.1em;">This is a sample text inside a box.</p>
+            </div>
+        </div>
+
+        <!-- Right Section -->
+        <div style="flex: 1; min-width: 300px; border: 1px solid #ccc; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <h2 style="text-align: center;">JSON Response</h2>
+            <table id="jsonTable" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left; background-color: #f2f2f2;">Key</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left; background-color: #f2f2f2;">Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- JSON data will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
 </body>
 </html>
